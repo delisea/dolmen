@@ -32,8 +32,8 @@ module type Term = sig
   val prop      : ?loc:location -> unit -> t
   val ty_int    : ?loc:location -> unit -> t
   val wildcard  : ?loc:location -> unit -> t
-  val true_     : ?loc:location -> unit -> t
-  val false_    : ?loc:location -> unit -> t
+  val true_t     : ?loc:location -> unit -> t
+  val false_t    : ?loc:location -> unit -> t
   (** Standard pre-defined constants. *)
 
   val quoted  : ?loc:location -> string -> t

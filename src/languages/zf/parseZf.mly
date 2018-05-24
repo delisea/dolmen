@@ -81,9 +81,9 @@ const:
   | INT
     { let loc = L.mk_pos $startpos $endpos in T.ty_int ~loc () }
   | LOGIC_TRUE
-    { let loc = L.mk_pos $startpos $endpos in T.true_ ~loc () }
+    { let loc = L.mk_pos $startpos $endpos in T.true_t ~loc () }
   | LOGIC_FALSE
-    { let loc = L.mk_pos $startpos $endpos in T.false_ ~loc () }
+    { let loc = L.mk_pos $startpos $endpos in T.false_t ~loc () }
 
 match_branch:
   | VERTICAL_BAR c=raw_var vars=var_or_wildcard* ARROW rhs=term

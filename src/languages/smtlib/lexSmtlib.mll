@@ -38,44 +38,59 @@
 }
 
 rule token = parse
-  | eof                 { EOF }
-  | [' ' '\t' '\r']+    { token lexbuf }
-  | '\n'                { Lexing.new_line lexbuf; token lexbuf }
-  | ';' (_ # '\n')*     { token lexbuf }
-  | '_'                 { UNDERSCORE }
-  | "as"                { AS }
-  | "let"               { LET }
-  | "forall"            { FORALL }
-  | "exists"            { EXISTS }
-  | '!'                 { ATTRIBUTE }
-  | "par"               { raise Error }
-  | "NUMERAL"           { raise Error }
-  | "DECIMAL"           { raise Error }
-  | "STRING"            { raise Error }
-  | "set-logic"         { SET_LOGIC }
-  | "set-option"        { SET_OPTION }
-  | "set-info"          { SET_INFO }
-  | "declare-sort"      { DECLARE_SORT }
-  | "define-sort"       { DEFINE_SORT }
-  | "declare-fun"       { DECLARE_FUN }
-  | "define-fun"        { DEFINE_FUN }
-  | "push"              { PUSH }
-  | "pop"               { POP }
-  | "assert"            { ASSERT }
-  | "check-sat"         { CHECK_SAT }
-  | "get-assertions"    { GET_ASSERTIONS }
-  | "get-proof"         { GET_PROOF }
-  | "get-unsat-core"    { GET_UNSAT_CORE }
-  | "get-value"         { GET_VALUE }
-  | "get-assignment"    { GET_ASSIGNMENT }
-  | "get-option"        { GET_OPTION }
-  | "get-info"          { GET_INFO }
-  | "exit"              { EXIT }
-  | '('                 { OPEN }
-  | ')'                 { CLOSE }
-  | ('0' | ['1'-'9'] ['0'-'9']*) as s
+  | eof                           { EOF }
+  | [' ' '\t' '\r']+              { token lexbuf }
+  | '\n'                          { Lexing.new_line lexbuf; token lexbuf }
+  | ';' (_ # '\n')*               { token lexbuf }
+  | '_'                           { UNDERSCORE }
+  | "as"                          { AS }
+  | "let"                         { LET }
+  | "forall"                      { FORALL }
+  | "exists"                      { EXISTS }
+  | '!'                           { ATTRIBUTE }
+  | "par"                         { raise Error }
+  | "NUMERAL"                     { raise Error }
+  | "DECIMAL"                     { raise Error }
+  | "STRING"                      { raise Error }
+  | "set-logic"                   { SET_LOGIC }
+  | "set-option"                  { SET_OPTION }
+  | "set-info"                    { SET_INFO }
+  | "declare-sort"                { DECLARE_SORT }
+  | "define-sort"                 { DEFINE_SORT }
+  | "declare-fun"                 { DECLARE_FUN }
+  | "define-fun"                  { DEFINE_FUN }
+  | "declare-const"               { DECLARE_CONST }
+  | "push"                        { PUSH }
+  | "pop"                         { POP }
+  | "assert"                      { ASSERT }
+  | "check-sat"                   { CHECK_SAT }
+  | "get-assertions"              { GET_ASSERTIONS }
+  | "get-proof"                   { GET_PROOF }
+  | "get-unsat-core"              { GET_UNSAT_CORE }
+  | "get-value"                   { GET_VALUE }
+  | "get-assignment"              { GET_ASSIGNMENT }
+  | "get-option"                  { GET_OPTION }
+  | "get-info"                    { GET_INFO }
+  | "exit"                        { EXIT }
+  | '('                           { OPEN }
+  | ')'                           { CLOSE }
+  | '<'                           { LT }
+  | '>'                           { GT }
+  | "<="                          { LE }
+  | ">="                          { GE }
+  | '='                           { EQ }
+  | "<>"                          { NEQ }
+  | '*'                           { MUL }
+  | '+'                           { ADD }
+  | '-'                           { SUB }
+  | '/'                           { DIV }
+  | ("true" | "TRUE" | "True")    { TRUE }
+  | ("false" | "FALSE" | "False") { FALSE }
+  (*| ['a'-'z' 'A'-'Z' '_'] ['0'-'9' 'a'-'z' 'A'-'Z' '.' '_']* as s
+        { VARIABLE s }*)
+  | ('0' | '-'? ['1'-'9'] ['0'-'9']*) as s
         { NUMERAL s }
-  | ('0' | ['1'-'9'] ['0'-'9']*) '.' ['0'-'9']+ as s
+  | ('0' | '-'? ['1'-'9'] ['0'-'9']*) '.' ['0'-'9']+ as s
         { DECIMAL s }
   | '#' 'x' ['0'-'9' 'A'-'F' 'a'-'f']+ as s 
         { HEXADECIMAL s }

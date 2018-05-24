@@ -19,6 +19,13 @@ numeral_plus:
     { s ^ "_" ^ n }
 ;
 
+var:
+    | s=SYMBOL
+    { fun ns -> let loc = L.mk_pos $startpos $endpos in T.const ~loc I.(mk ns s) }
+  (*| s=VARIABLE
+    { fun ns -> let loc = L.mk_pos $startpos $endpos in T.const ~loc I.(mk ns s) }*)
+;
+
 spec_constant:
   | s=NUMERAL
     { fun _ -> let loc = L.mk_pos $startpos $endpos in T.int ~loc s }
@@ -32,10 +39,17 @@ spec_constant:
     { fun ns -> let loc = L.mk_pos $startpos $endpos in T.const ~loc I.(mk ns s) }
 ;
 
+symbol:
+  |s=SYMBOL
+    {s}
+  |s=VARIABLE
+    {s}
+;
+
 s_expr:
   | c=spec_constant
     { c I.attr }
-  | s=SYMBOL
+  | s=symbol
     { let loc = L.mk_pos $startpos $endpos in T.const ~loc I.(mk term s) }
   | s=KEYWORD
     { let loc = L.mk_pos $startpos $endpos in T.const ~loc I.(mk term s) }
@@ -44,9 +58,9 @@ s_expr:
 ;
 
 identifier:
-  | s=SYMBOL
+  | s=symbol
     { s }
-  | OPEN UNDERSCORE s=SYMBOL n=numeral_plus CLOSE
+  | OPEN UNDERSCORE s=symbol n=numeral_plus CLOSE
     { s ^ "_" ^ n }
 ;
 
@@ -64,7 +78,7 @@ sort:
 attribute_value:
   | v=spec_constant
     { v I.attr }
-  | v=SYMBOL
+  | v=symbol
     { let loc = L.mk_pos $startpos $endpos in T.const ~loc I.(mk attr v) }
   | OPEN l=s_expr* CLOSE
     { let loc = L.mk_pos $startpos $endpos in T.sexpr ~loc l }
@@ -97,7 +111,13 @@ qual_identifier:
 ;
 
 var_binding:
-  | OPEN s=SYMBOL t=term CLOSE
+  | OPEN s=symbol p=pol CLOSE
+    { let c =
+        let loc = L.mk_pos $startpos(s) $endpos(s) in
+        T.const ~loc I.(mk term s)
+      in
+      let loc = L.mk_pos $startpos $endpos in T.colon ~loc c p }
+  | OPEN s=symbol t=term CLOSE
     { let c =
         let loc = L.mk_pos $startpos(s) $endpos(s) in
         T.const ~loc I.(mk term s)
@@ -106,12 +126,34 @@ var_binding:
 ;
 
 sorted_var:
-  | OPEN s=SYMBOL ty=sort CLOSE
+  | OPEN s=symbol ty=sort CLOSE
     { let c =
         let loc = L.mk_pos $startpos(s) $endpos(s) in
         T.const ~loc I.(mk term s)
       in
       let loc = L.mk_pos $startpos $endpos in T.colon ~loc c ty }
+;
+
+pol:
+  | SUB p=pol
+    { let loc = L.mk_pos $startpos $endpos in T.sub ~loc (T.coef ~loc (T.int ~loc "0"))  p }
+  | v=var
+    { let loc = L.mk_pos $startpos $endpos in T.apply ~loc (v I.term) [] }
+    (*{ let loc = L.mk_pos $startpos $endpos in T.pvar ~loc (v I.term) }*)
+  | v=spec_constant
+    { let loc = L.mk_pos $startpos $endpos in T.coef ~loc (v I.term) }
+  | OPEN MUL args=pol+ CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.multl ~loc args }
+  | OPEN ADD args=pol+ CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.addl ~loc args }
+  | OPEN SUB g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.sub ~loc g d }
+  | OPEN SUB p=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.sub ~loc (T.coef ~loc (T.int ~loc "0"))  p }
+  | OPEN DIV g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.div ~loc g d }
+  | OPEN LET OPEN l=var_binding+ CLOSE t=term CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.letin ~loc l t }
 ;
 
 term:
@@ -121,6 +163,22 @@ term:
     { let loc = L.mk_pos $startpos $endpos in T.apply ~loc s [] }
   | OPEN f=qual_identifier args=term+ CLOSE
     { let loc = L.mk_pos $startpos $endpos in T.apply ~loc f args }
+  | OPEN LT g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.lt ~loc g d }
+  | OPEN GT g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.gt ~loc g d }
+  | OPEN LE g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.leq ~loc g d }
+  | OPEN GE g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.geq ~loc g d }
+  | OPEN EQ g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.eq ~loc g d(*T.apply ~loc (T.const ~loc I.(mk term "not")) [T.apply ~loc (T.const ~loc I.(mk term "or")) [(T.gt ~loc g d);(T.lt ~loc g d)]]*)(*TODO: better? T.eq ~loc g d*) }
+  | OPEN NEQ g=pol d=pol CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.neq ~loc g d(*T.apply ~loc (T.const ~loc I.(mk term "or")) [(T.gt ~loc g d);(T.lt ~loc g d)]*)(*TODO: better? T.eq ~loc g d*) }
+  | OPEN EQ g=term d=term CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.eq ~loc g d(*T.apply ~loc (T.const ~loc I.(mk term "not")) [T.apply ~loc (T.const ~loc I.(mk term "or")) [(T.gt ~loc g d);(T.lt ~loc g d)]]*)(*TODO: better? T.eq ~loc g d*) }
+  | OPEN NEQ g=term d=term CLOSE
+    { let loc = L.mk_pos $startpos $endpos in T.neq ~loc g d(*T.apply ~loc (T.const ~loc I.(mk term "or")) [(T.gt ~loc g d);(T.lt ~loc g d)]*)(*TODO: better? T.eq ~loc g d*) }
   | OPEN LET OPEN l=var_binding+ CLOSE t=term CLOSE
     { let loc = L.mk_pos $startpos $endpos in T.letin ~loc l t }
   | OPEN FORALL OPEN l=sorted_var+ CLOSE t=term CLOSE
@@ -129,6 +187,10 @@ term:
     { let loc = L.mk_pos $startpos $endpos in T.exists ~loc l t }
   | OPEN ATTRIBUTE f=term args=attribute+ CLOSE
     { let loc = L.mk_pos $startpos $endpos in T.annot ~loc f args }
+  | TRUE
+    { let loc = L.mk_pos $startpos $endpos in T.true_ ~loc }
+  | FALSE
+    { let loc = L.mk_pos $startpos $endpos in T.false_ ~loc }
 ;
 
 command_option:
@@ -147,7 +209,7 @@ command:
   | OPEN CHECK_SAT CLOSE
     { let loc = L.mk_pos $startpos $endpos in S.check_sat ~loc () }
 
-  | OPEN SET_LOGIC s=SYMBOL CLOSE
+  | OPEN SET_LOGIC s=symbol CLOSE
     { let loc = L.mk_pos $startpos $endpos in S.set_logic ~loc s }
 
   | OPEN GET_INFO i=KEYWORD CLOSE
@@ -160,20 +222,33 @@ command:
   | OPEN SET_OPTION c=command_option CLOSE
     { let loc = L.mk_pos $startpos $endpos in S.set_option ~loc c }
 
-  | OPEN DECLARE_SORT s=SYMBOL n=NUMERAL CLOSE
+  | OPEN DECLARE_SORT s=symbol n=NUMERAL CLOSE
     { let id = I.(mk sort s) in
       let loc = L.mk_pos $startpos $endpos in
       S.type_decl ~loc id (int_of_string n) }
-  | OPEN DEFINE_SORT s=SYMBOL OPEN args=SYMBOL* CLOSE ty=sort CLOSE
+
+  | OPEN DEFINE_SORT s=symbol OPEN args=symbol* CLOSE ty=sort CLOSE
     { let id = I.(mk sort s) in
       let l = List.map I.(mk sort) args in
       let loc = L.mk_pos $startpos $endpos in
+
       S.type_def ~loc id l ty }
-  | OPEN DECLARE_FUN s=SYMBOL OPEN args=sort* CLOSE ty=sort CLOSE
+  | OPEN DECLARE_FUN s=symbol OPEN args=sort* CLOSE ty=sort CLOSE
     { let id = I.(mk term s) in
       let loc = L.mk_pos $startpos $endpos in
       S.fun_decl ~loc id args ty }
-  | OPEN DEFINE_FUN s=SYMBOL OPEN args=sorted_var* CLOSE ret=sort body=term CLOSE
+
+  | OPEN DEFINE_FUN s=symbol OPEN args=sorted_var* CLOSE ret=sort body=pol CLOSE
+    { let id = I.(mk term s) in
+      let loc = L.mk_pos $startpos $endpos in
+      S.fun_def ~loc id args ret body }
+
+  | OPEN DECLARE_CONST s=symbol ty=sort CLOSE
+    { let id = I.(mk term s) in
+      let loc = L.mk_pos $startpos $endpos in
+      S.fun_decl ~loc id [] ty }
+
+  | OPEN DEFINE_FUN s=symbol OPEN args=sorted_var* CLOSE ret=sort body=term CLOSE
     { let id = I.(mk term s) in
       let loc = L.mk_pos $startpos $endpos in
       S.fun_def ~loc id args ret body }

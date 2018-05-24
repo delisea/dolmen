@@ -72,7 +72,26 @@ module type Term = sig
   (** Attach a list of attributes (also called annotations) to a term. As written
       in the smtlib manual, "Term attributes have no logical meaning --
       semantically, [attr t l] is equivalent to [t]" *)
+  val true_ : ?loc:location -> t
+  val false_ : ?loc:location -> t
 
+  val lt : ?loc:location -> t -> t -> t
+  val gt : ?loc:location -> t -> t -> t
+  val leq : ?loc:location -> t -> t -> t
+  val geq : ?loc:location -> t -> t -> t
+  val eq : ?loc:location -> t -> t -> t
+  val neq : ?loc:location -> t -> t -> t
+
+  val multl : ?loc:location -> t list -> t
+
+  val addl : ?loc:location -> t list -> t
+
+  val sub : ?loc:location -> t -> t -> t
+  val div : ?loc:location -> t -> t -> t
+
+
+  val pvar : ?loc:location -> t -> t
+  val coef : ?loc:location -> t -> t
 end
 (** Implementation requirements for Smtlib terms. *)
 
@@ -156,7 +175,6 @@ module type Statement = sig
 
   val exit : ?loc:location -> unit -> t
   (** Exit the interactive loop. *)
-
 end
 (** implementation requirement for smtlib statements. *)
 

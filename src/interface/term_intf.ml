@@ -54,8 +54,8 @@ module type Logic = sig
       format. Will be defined as a constant in most other languages (for instance,
       "$o" in tptp). *)
 
-  val true_     : ?loc:location -> unit -> t
-  val false_    : ?loc:location -> unit -> t
+  val true_t     : ?loc:location -> unit -> t
+  val false_t    : ?loc:location -> unit -> t
   (** The constants for the true and false propositional constants. Again defined
       as lexical token in the Zipperposition format, while treated as a constant
       in other languages ("$true" in tptp). *)
@@ -191,17 +191,33 @@ module type Logic = sig
   val uminus : ?loc:location -> t -> t
   (** Arithmetic unary minus. *)
 
+  val true_  : ?loc:location -> t
+
+  val false_ : ?loc:location -> t
+
   val add    : ?loc:location -> t -> t -> t
+  (** Arithmetic addition. *)
+
+  val addl   : ?loc:location -> t list -> t
   (** Arithmetic addition. *)
 
   val sub    : ?loc:location -> t -> t -> t
   (** Arithmetic substraction. *)
 
+  val div    : ?loc:location -> t -> t -> t
+  (** Arithmetic substraction. *)
+
   val mult   : ?loc:location -> t -> t -> t
+  (** Arithmetic multiplication. *)
+
+  val multl  : ?loc:location -> t list -> t
   (** Arithmetic multiplication. *)
 
   val lt     : ?loc:location -> t -> t -> t
   (** Arithmetic "lesser than" comparison (strict). *)
+
+  val pvar   : ?loc:location -> t -> t
+  val coef   : ?loc:location -> t -> t
 
   val leq    : ?loc:location -> t -> t -> t
   (** Arithmetic "lesser or equal" comparison. *)
@@ -210,6 +226,12 @@ module type Logic = sig
   (** Arithmetic "greater than" comparison (strict). *)
 
   val geq    : ?loc:location -> t -> t -> t
+  (** Arithmetic "greater or equal" comparison. *)
+
+  val eq    : ?loc:location -> t -> t -> t
+  (** Arithmetic "greater or equal" comparison. *)
+
+  val neq    : ?loc:location -> t -> t -> t
   (** Arithmetic "greater or equal" comparison. *)
 
 
