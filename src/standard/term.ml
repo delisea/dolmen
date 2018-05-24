@@ -14,7 +14,7 @@ type builtin =
 
   | Int                 (* Arithmetic type for integers *)
   | Minus               (* arithmetic unary minus *)
-  | Add | Sub | Mult    (* arithmetic operators *)
+  | Add | Sub |Div |Mult(* arithmetic operators *)
   | Lt | Leq            (* arithmetic comparisons *)
   | Gt | Geq            (* arithmetic comparisons *)
 
@@ -26,6 +26,8 @@ type builtin =
   | Nand | Xor | Nor    (* Advanced propositional connectives *)
   | Imply | Implied     (* Implication and left implication *)
   | Equiv               (* Equivalence *)
+
+  | Var | Coef
 
 type binder =
   | All | Ex
@@ -78,6 +80,7 @@ let builtin_to_string = function
   | Minus -> "-"
   | Add -> "+"
   | Sub -> "-"
+  | Div -> "/"
   | Mult -> "×"
   | Lt -> "<"
   | Leq -> "≤"
@@ -95,6 +98,8 @@ let builtin_to_string = function
   | Imply -> "⇒"
   | Implied -> "⇐"
   | Equiv -> "⇔"
+  | Var -> "v:"
+  | Coef -> "c:"
 
 let binder_to_string = function
   | All -> "∀"
@@ -272,8 +277,8 @@ let equiv_t     = builtin Equiv
 let implies_t   = builtin Imply
 let implied_t   = builtin Implied
 
-let true_       = builtin True
-let false_      = builtin False
+let true_t      = builtin True
+let false_t     = builtin False
 let wildcard    = builtin Wildcard
 
 let ite_t       = builtin Ite
@@ -291,19 +296,30 @@ let ty_int      = builtin Int
 let uminus_t    = builtin Minus
 let add_t       = builtin Add
 let sub_t       = builtin Sub
+let div_t       = builtin Div
 let mult_t      = builtin Mult
 let lt_t        = builtin Lt
 let leq_t       = builtin Leq
 let gt_t        = builtin Gt
 let geq_t       = builtin Geq
 
+let var_t       = builtin Var
+let coef_t      = builtin Coef
+
 let nary t = (fun ?loc l -> apply ?loc t l)
 let unary t = (fun ?loc x -> apply ?loc t [x])
 let binary t = (fun ?loc x y -> apply ?loc t [x; y])
+let noary t = (fun ?loc -> apply ?loc t [])
+
+(* {2 constant} *)
+
+let true_  = noary (true_t ())
+let false_ = noary (false_t ())
 
 (* {2 Usual functions} *)
 
 let eq = binary (eq_t ())
+let neq = binary (neq_t ())
 
 (* {2 Logical connectives} *)
 
@@ -317,12 +333,18 @@ let equiv = binary (equiv_t ())
 
 let uminus  = unary (uminus_t ())
 let add     = binary (add_t ())
+let addl    = nary (add_t ())
 let sub     = binary (sub_t ())
+let div     = binary (div_t ())
 let mult    = binary (mult_t ())
+let multl   = nary (mult_t ())
 let lt      = binary (lt_t ())
 let leq     = binary (leq_t ())
 let gt      = binary (gt_t ())
 let geq     = binary (geq_t ())
+
+let pvar    = unary (var_t ())
+let coef    = unary (coef_t ())
 
 (* {2 Binders} *)
 
@@ -424,4 +446,3 @@ let subtype ?loc a b = apply ?loc (subtype_t ?loc ()) [a; b]
 
 let quoted ?loc name =
   const ?loc Id.({ name; ns = Attr})
-

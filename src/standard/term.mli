@@ -40,6 +40,7 @@ type builtin =
   (** Arithmetic addition. *)
   | Sub
   (** Arithmetic substraction. *)
+  | Div
   | Mult
   (** Arithmetic multiplication. *)
   | Lt
@@ -80,6 +81,8 @@ type builtin =
     Some languages have specific syntax for logical connectives
     (tptp's'&&' or '||' for isntance) whereas some (smtlib for instance)
     don't and treat them as constants. *)
+  | Var
+  | Coef
 
 type binder =
   | All
